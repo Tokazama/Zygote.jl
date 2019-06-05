@@ -59,6 +59,10 @@ pull_block_horz(sz, Δ, A::AbstractMatrix) = Δ[:, sz-size(A, 2)+1:sz]
   return hcat(A...), Δ->(map(n->pull_block_horz(sz[n], Δ, A[n]), eachindex(A))...,)
 end
 
+@adjoint function cat(A::AbstractArray...; dims::Int)
+    sz = cumsum([size.(A, dims)...])
+    return cat(A...; dims=dims), Δ->(map(n->Δ[fill(Colon(), dims - 1)..., sz[n]-size(A[n], dims)+1:sz[n], fill(Colon(), ndims(A[n]) - dims)...], eachindex(A))...,)
+end
 
 @adjoint function repeat(xs; inner=ntuple(_->1, ndims(xs)), outer=ntuple(_->1, ndims(xs)))
   repeat(xs, inner = inner, outer = outer), function (Δ)
